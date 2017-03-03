@@ -1,5 +1,5 @@
 # mvc-filehelper
-### comming soon
+### coming soon
 
 <img src="/Images/file-attachment-display.png" />
 
