@@ -1,0 +1,21 @@
+﻿
+/*Details*/
+.file-attachments.readonly-table th:nth-child(2) {
+    width: 120px;
+    text-align: right;
+}
+
+.file-attachments.readonly-table td:nth-child(2) {
+    text-align: right;
+}
+
+/*Edit*/
+.file-attachments.edit-table th:nth-child(2) {
+    width: 120px;
+    text-align: right;
+}
+
+.file-attachments.edit-table td:nth-child(2) {
+    text-align: right;
+}
+
