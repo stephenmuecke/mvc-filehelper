@@ -16,9 +16,7 @@ namespace Sandtrap.Web.Utilities
 
         #region .Declarations 
 
-        private const string nullDirectory = "The Directory cannot be null.";
-        const string nullFileName = "The FileName cannot be null.";
-        const string nullPath = "The Path cannot be null.";
+        private const string nullPath = "The file path cannot be null.";
 
         #endregion
 
@@ -57,9 +55,8 @@ namespace Sandtrap.Web.Utilities
                     fileName = string.Format("{0}{1}", Guid.NewGuid(), extension);
                     // Update properties
                     attachment.DisplayName = file.FileName;
+                    attachment.FilePath = Path.Combine(physicalPath, fileName);
                     attachment.Size = (int)Math.Round(file.ContentLength / 1024F);
-                    attachment.Directory = virtualPath;
-                    attachment.FileName = fileName;
                     attachment.Status = FileAttachmentStatus.Added;
                     // Save to server
                     file.SaveAs(Path.Combine(physicalPath, fileName));
@@ -67,7 +64,7 @@ namespace Sandtrap.Web.Utilities
                 else if (attachment.Status == FileAttachmentStatus.Deleted && deleteFiles)
                 {
                     // Delete the file from the server
-                    File.Delete(Path.Combine(physicalPath, attachment.FileName));
+                    File.Delete(HttpContext.Current.Server.MapPath(attachment.FilePath));
                 }
             }
         }
@@ -81,21 +78,16 @@ namespace Sandtrap.Web.Utilities
         public static FileResult Download(IFileAttachment attachment)
         {
             // Validate
-            if (attachment.Directory == null)
+            if (attachment.FilePath == null)
             {
-                throw new ArgumentNullException(nullDirectory);
+                throw new ArgumentNullException(nullPath);
             }
-            if (attachment.FileName == null)
-            {
-                throw new ArgumentNullException(nullFileName);
-            }
-            string path = Path.Combine(attachment.Directory, attachment.FileName);
             if (attachment.DisplayName == null)
             {
-                attachment.DisplayName = attachment.FileName;
+                attachment.DisplayName = Path.GetFileName(attachment.FilePath);
             }
             // Return FileResult
-            return Download(path, attachment.DisplayName);
+            return Download(attachment.FilePath, attachment.DisplayName);
         }
 
         /// <summary>
