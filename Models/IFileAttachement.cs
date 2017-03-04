@@ -23,13 +23,13 @@ namespace Sandtrap.Web.Models
         /// </summary>
         int? ID { get; set; }
         /// <summary>
-        /// Gets of sets the virtual path to the file.
-        /// </summary>
-        string VirtualPath { get; set; }
-        /// <summary>
         /// Gets or sets the file display name
         /// </summary>
         string DisplayName { get; set; }
+        /// <summary>
+        /// Gets of sets the virtual path to the file.
+        /// </summary>
+        string VirtualPath { get; set; }
         /// <summary>
         /// Gets of sets the file size (in bytes).
         /// </summary>
