@@ -181,7 +181,7 @@ namespace Sandtrap.Web.Html
             html.Append(id.ToString());
             // Generate the input for the file name and path
             TagBuilder fileName = new TagBuilder("input");
-            fileName.MergeAttribute("value", attachment == null ? string.Empty : attachment.FilePath);
+            fileName.MergeAttribute("value", attachment == null ? string.Empty : attachment.VirtualPath);
             fileName.MergeAttribute("type", "hidden");
             fileName.MergeAttribute("name", string.Format("{0}[{1}].FilePath", propertyName, index));
             html.Append(fileName.ToString());
