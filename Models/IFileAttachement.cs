@@ -25,7 +25,7 @@ namespace Sandtrap.Web.Models
         /// <summary>
         /// Gets of sets the virtual path to the file.
         /// </summary>
-        string FilePath { get; set; }
+        string VirtualPath { get; set; }
         /// <summary>
         /// Gets or sets the file display name
         /// </summary>
