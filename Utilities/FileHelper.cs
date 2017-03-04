@@ -55,7 +55,7 @@ namespace Sandtrap.Web.Utilities
                     fileName = string.Format("{0}{1}", Guid.NewGuid(), extension);
                     // Update properties
                     attachment.DisplayName = file.FileName;
-                    attachment.FilePath = Path.Combine(physicalPath, fileName);
+                    attachment.VirtualPath = Path.Combine(physicalPath, fileName);
                     attachment.Size = (int)Math.Round(file.ContentLength / 1024F);
                     attachment.Status = FileAttachmentStatus.Added;
                     // Save to server
@@ -64,7 +64,7 @@ namespace Sandtrap.Web.Utilities
                 else if (attachment.Status == FileAttachmentStatus.Deleted && deleteFiles)
                 {
                     // Delete the file from the server
-                    File.Delete(HttpContext.Current.Server.MapPath(attachment.FilePath));
+                    File.Delete(HttpContext.Current.Server.MapPath(attachment.VirtualPath));
                 }
             }
         }
@@ -78,16 +78,16 @@ namespace Sandtrap.Web.Utilities
         public static FileResult Download(IFileAttachment attachment)
         {
             // Validate
-            if (attachment.FilePath == null)
+            if (attachment.VirtualPath == null)
             {
                 throw new ArgumentNullException(nullPath);
             }
             if (attachment.DisplayName == null)
             {
-                attachment.DisplayName = Path.GetFileName(attachment.FilePath);
+                attachment.DisplayName = Path.GetFileName(attachment.VirtualPath);
             }
             // Return FileResult
-            return Download(attachment.FilePath, attachment.DisplayName);
+            return Download(attachment.VirtualPath, attachment.DisplayName);
         }
 
         /// <summary>
