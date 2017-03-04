@@ -9,8 +9,7 @@ namespace Sandtrap.Web.Models
     public class FileAttachment : IFileAttachment
     {
         public int? ID { get; set; }
-        public string FileName { get; set; }
-        public string Directory { get; set; }
+        public string FilePath { get; set; }
         public string DisplayName { get; set; }
         public int? Size { get; set; }
         public FileAttachmentStatus Status { get; set; }
