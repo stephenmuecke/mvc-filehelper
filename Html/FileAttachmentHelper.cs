@@ -179,17 +179,11 @@ namespace Sandtrap.Web.Html
             id.MergeAttribute("type", "hidden");
             id.MergeAttribute("name", string.Format("{0}[{1}].ID", propertyName, index));
             html.Append(id.ToString());
-            // Generate the input for the file directory
-            TagBuilder directory = new TagBuilder("input");
-            directory.MergeAttribute("value", attachment == null ? string.Empty : attachment.Directory);
-            directory.MergeAttribute("type", "hidden");
-            directory.MergeAttribute("name", string.Format("{0}[{1}].Directory", propertyName, index));
-            html.Append(directory.ToString());
-            // Generate the input for the file name
+            // Generate the input for the file name and path
             TagBuilder fileName = new TagBuilder("input");
-            fileName.MergeAttribute("value", attachment == null ? string.Empty : attachment.FileName);
+            fileName.MergeAttribute("value", attachment == null ? string.Empty : attachment.FilePath);
             fileName.MergeAttribute("type", "hidden");
-            fileName.MergeAttribute("name", string.Format("{0}[{1}].FileName", propertyName, index));
+            fileName.MergeAttribute("name", string.Format("{0}[{1}].FilePath", propertyName, index));
             html.Append(fileName.ToString());
             // Generate the input for the files display name
             TagBuilder displayName = new TagBuilder("input");
@@ -203,7 +197,6 @@ namespace Sandtrap.Web.Html
             size.MergeAttribute("type", "hidden");
             size.MergeAttribute("name", string.Format("{0}[{1}].Size", propertyName, index));
             html.Append(size.ToString());
-
             // Generate the input for the file status
             TagBuilder status = new TagBuilder("input");
             status.AddCssClass("file-status");
