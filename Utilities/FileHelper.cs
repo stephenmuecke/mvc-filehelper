@@ -16,6 +16,7 @@ namespace Sandtrap.Web.Utilities
 
         #region .Declarations 
 
+        private const string nullAttachment = "The attachment cannot be null.";
         private const string nullPath = "The file path cannot be null.";
 
         #endregion
@@ -36,6 +37,10 @@ namespace Sandtrap.Web.Utilities
         /// </param>
         public static void Save(IEnumerable<IFileAttachment> attachments, string virtualPath, bool deleteFiles)
         {
+            if (attachments == null)
+            {
+                return;
+            }
             // Get the physical path
             string physicalPath = HttpContext.Current.Server.MapPath(virtualPath);
             // string physicalPath = HostingEnvironment.MapPath(path);
@@ -102,6 +107,10 @@ namespace Sandtrap.Web.Utilities
         public static FileResult Download(string path, string displayName)
         {
             // Validate
+            if (attachment == null)
+            {
+                throw new ArgumentNullException(nullAttachment);
+            }
             if (path == null)
             {
                 throw new ArgumentNullException(nullPath);
