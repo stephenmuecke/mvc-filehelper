@@ -50,7 +50,7 @@ table .table-text {
 
 /* Edit table */
 .edit-table th {
-    padding: 4px;
+    padding: 5px 4px;
 }
 
 .edit-table .table-text {
