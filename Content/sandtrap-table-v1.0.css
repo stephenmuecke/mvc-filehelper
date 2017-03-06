@@ -80,6 +80,10 @@ table .table-text {
     margin: 0;
 }
 
+.edit-table textarea {
+    resize: none;
+}
+
 .edit-table .numeric-text {
     left: auto;
     right: 4px;
