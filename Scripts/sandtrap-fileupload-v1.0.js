@@ -69,7 +69,7 @@
         var newRow = this.newRow.clone();
         // Update the indexer
         var index = $.now();
-        var indexerInput = newRow.find('input');
+        var indexerInput = newRow.find('input').last();
         indexerInput.val(index);
         // Update the display values
         var cells = newRow.find('.table-text');
@@ -83,8 +83,18 @@
         var name = fileInput.attr('name');
         fileInput.attr('name', name.replace('#', index));
         indexerInput.after(fileInput);
+        // Rename other inputs
+        var inputs = newRow.find('.table-control');
+        $.each(inputs, function () {
+            name = $(this).attr('name');
+            $(this).attr('name', name.replace('#', index));
+            if ($(this).is(':checkbox')) {
+                $(this).next().attr('name', name.replace('#', index));
+            }
+        })
         // Add new row
         this.body.append(newRow);
+        inputs.first().focus();
     }
 
     // Delete new rows from the table or archive/activate existing rows
@@ -94,6 +104,8 @@
         if (input.length === 0) {
             // It never existed so remove from DOM
             row.remove();
+            //TODO: What should we set focus to?
+            this.addButton.focus();
         } else if (row.hasClass('archived')) {
             // Un-mark it for deletion
             row.removeClass('archived');
