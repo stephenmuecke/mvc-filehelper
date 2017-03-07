@@ -6,6 +6,8 @@ using System.Web.Mvc;
 using System.Web.Mvc.Html;
 using Sandtrap.Web.Models;
 
+using System.Linq;
+
 namespace Sandtrap.Web.Html
 {
 
@@ -33,6 +35,23 @@ namespace Sandtrap.Web.Html
         #region .Methods 
 
         /// <summary>
+        /// Returns the html to display file properties and download links.
+        /// </summary>
+        /// <param name="helper">
+        /// The HtmlHelper instance that this method extends.
+        /// </param>
+        /// <param name="expression">
+        /// An expression that identifies the property to render.
+        /// </param>
+        /// <param name="actionName">
+        /// The name of the action method that returns a FileResult to download the file.
+        /// </param>
+        public static MvcHtmlString FileAttachmentDisplayFor<TModel>(this HtmlHelper<TModel> helper, Expression<Func<TModel, IEnumerable<IFileAttachment>>> expression, string actionName = "DownloadAttachment")
+        {
+            return FileAttachmentDisplayFor(helper, expression, actionName, null);
+        }
+
+        /// <summary>
         /// Returns the html to display file properties and links.
         /// </summary>
         /// <param name="helper">
@@ -41,7 +60,13 @@ namespace Sandtrap.Web.Html
         /// <param name="expression">
         /// An expression that identifies the property to render.
         /// </param>
-        public static MvcHtmlString FileAttachmentDisplayFor<TModel>(this HtmlHelper<TModel> helper, Expression<Func<TModel, IEnumerable<IFileAttachment>>> expression, string downloadActionName = "DownloadAttachment")
+        /// <param name="actionName">
+        /// The name of the action method that returns a FileResult to download the file.
+        /// </param>
+        /// <param name="controllerName">
+        /// The name of the controller containing the <paramref name="actionName"/> method.
+        /// </param>
+        public static MvcHtmlString FileAttachmentDisplayFor<TModel>(this HtmlHelper<TModel> helper, Expression<Func<TModel, IEnumerable<IFileAttachment>>> expression, string actionName, string controllerName)
         {
             // Get the model metadata
             ModelMetadata metaData = ModelMetadata.FromLambdaExpression(expression, helper.ViewData);
@@ -53,14 +78,21 @@ namespace Sandtrap.Web.Html
                 throw new ArgumentException("The collection contains no elements");
             }
             // Get the fully qualified name of the property
-            string fieldName = ExpressionHelper.GetExpressionText(expression);
+            string propertyName = ExpressionHelper.GetExpressionText(expression);
+            // Get the type metadata
+            Type modelType = metaData.ModelType.GetGenericArguments()[0];
+            // Get properties included in the model but not the IFileAttachment
+            IEnumerable<ModelMetadata> extraProperties = GetExtraProperties(modelType);
+            // Build the html
             StringBuilder html = new StringBuilder();
-            html.Append(DisplayHeader());
-            html.Append(DisplayBody(helper, attachments, downloadActionName));
+            IEnumerable<string> extraColumns = extraProperties.Select(x => x.GetDisplayName());
+            html.Append(DisplayHeader(extraColumns));
+            extraColumns = extraProperties.Select(x => x.PropertyName);
+            html.Append(DisplayBody(helper, modelType, attachments, extraColumns, actionName, controllerName));
             TagBuilder table = new TagBuilder("table");
             table.AddCssClass("readonly-table");
             table.AddCssClass("file-attachments");
-            table.MergeAttribute("id", HtmlHelper.GenerateIdFromName(fieldName));
+            table.MergeAttribute("id", HtmlHelper.GenerateIdFromName(propertyName));
             table.InnerHtml = html.ToString();
             return MvcHtmlString.Create(table.ToString());
         }
@@ -82,14 +114,26 @@ namespace Sandtrap.Web.Html
             IEnumerable<IFileAttachment> attachments = metaData.Model as IEnumerable<IFileAttachment>;
             // Get the fully qualified name of the property
             string propertyName = ExpressionHelper.GetExpressionText(expression);
+            // Get the type metadata
+            Type modelType = metaData.ModelType.GetGenericArguments()[0];
+            // Get properties included in the model but not the IFileAttachment
+            IEnumerable<ModelMetadata> extraProperties = GetExtraProperties(modelType);
+            // Build html
             StringBuilder html = new StringBuilder();
-            html.Append(EditHeader());
-            if (attachments != null)
+            IEnumerable<string> extraColumns = extraProperties.Select(x => x.GetDisplayName());
+            html.Append(EditHeader(extraColumns));
+            extraColumns = extraProperties.Select(x => x.PropertyName);
+            if (attachments == null)
             {
-                html.Append(EditBody(attachments, propertyName));
+                TagBuilder tbody = new TagBuilder("tbody");
+                html.Append(tbody.ToString());
             }
-            html.Append(HiddenRow(propertyName));
-            html.Append(EditFooter(propertyName));
+            else
+            {
+                html.Append(EditBody(helper, modelType, attachments, propertyName, extraColumns));
+            }
+            html.Append(HiddenRow(helper, modelType, propertyName, extraColumns));
+            html.Append(EditFooter(propertyName, extraProperties.Count()));
             TagBuilder table = new TagBuilder("table");
             table.AddCssClass("edit-table");
             table.AddCssClass("file-attachments");
@@ -102,16 +146,30 @@ namespace Sandtrap.Web.Html
 
         #region .Helper methods 
 
+        private static IEnumerable<ModelMetadata> GetExtraProperties(Type type)
+        {
+            ModelMetadata metadata = ModelMetadataProviders.Current.GetMetadataForType(null, type);
+            // Get properties not included in IFileAttachment
+            IEnumerable<string> intefaceNames = typeof(IFileAttachment).GetProperties().Select(x => x.Name);
+            return metadata.Properties.Where(x => !intefaceNames.Contains(x.PropertyName));
+        }
+
         // Generates the thead element
-        public static string EditHeader()
+        private static string EditHeader(IEnumerable<string> extraColumns)
         {
             // Generate the cells
             StringBuilder html = new StringBuilder();
             string fileNameHeader = HeaderCell("File name");
+            
+            html.Append(fileNameHeader);
+            foreach(string heading in extraColumns)
+            {
+                string headerCell = HeaderCell(heading);
+                html.Append(headerCell);
+            }
             string fileSizeHeader = HeaderCell("File size");
             string buttonHeader = HeaderCell(string.Empty, "button-header-cell");
             string hiddenHeader = HeaderCell(string.Empty, "hidden-header-cell");
-            html.Append(fileNameHeader);
             html.Append(fileSizeHeader);
             html.Append(buttonHeader);
             html.Append(hiddenHeader);
@@ -125,13 +183,13 @@ namespace Sandtrap.Web.Html
         }
 
         // Generates the visible tbody element containing details of existing attachments
-        public static string EditBody(IEnumerable<IFileAttachment> attachments, string propertyName)
+        private static string EditBody(HtmlHelper helper, Type modelType, IEnumerable<IFileAttachment> attachments, string propertyName, IEnumerable<string> extraProperties)
         {
             StringBuilder html = new StringBuilder();
             int rowNumber = 0;
             foreach (IFileAttachment attachment in attachments)
             {
-                string tableRow = EditRow(attachment, propertyName, rowNumber);
+                string tableRow = EditRow(helper, modelType, attachment, propertyName, rowNumber, extraProperties);
                 html.Append(tableRow);
                 rowNumber++;
             }
@@ -141,15 +199,20 @@ namespace Sandtrap.Web.Html
         }
 
         // Generates a row in the visible tbody element
-        public static string EditRow(IFileAttachment attachment, string prefix, int index)
+        private static string EditRow(HtmlHelper helper, Type modelType, IFileAttachment attachment, string propertyName, int index, IEnumerable<string> extraColumns)
         {
+            // Get the ModelMetadata for the attachment
+            ModelMetadata itemMetadata = ModelMetadataProviders.Current.GetMetadataForType(() => attachment, modelType);
             // Generate table cells
             StringBuilder html = new StringBuilder();
             string displayName = TableCell(attachment.DisplayName);
+            html.Append(displayName);
+            string prefix = String.Format("{0}[{1}]", propertyName, index);
+            string formControls = EditableFormControls(helper, itemMetadata, prefix, extraColumns);
+            html.Append(formControls);
             string fileSize = TableCell(string.Format("{0} KB", attachment.Size));
             string button = ButtonCell(ButtonType.Delete);
-            string inputs = EditRowInputs(attachment, prefix, index);
-            html.Append(displayName);
+            string inputs = EditRowInputs(attachment, propertyName, index);
             html.Append(fileSize);
             html.Append(button);
             html.Append(inputs);
@@ -164,7 +227,7 @@ namespace Sandtrap.Web.Html
         }
 
         // Generates the cell containing the inputs for binding
-        public static string EditRowInputs(IFileAttachment attachment, string propertyName, int index)
+        private static string EditRowInputs(IFileAttachment attachment, string propertyName, int index)
         {
             StringBuilder html = new StringBuilder();
             // Generate the input for the collection indexer
@@ -212,7 +275,7 @@ namespace Sandtrap.Web.Html
         }
 
         // Generates the tfoot element
-        public static string EditFooter(string propertyName)
+        private static string EditFooter(string propertyName, int extraProperties)
         {
             // Generate the cells
             StringBuilder html = new StringBuilder();
@@ -221,6 +284,10 @@ namespace Sandtrap.Web.Html
             string inputs = FooterRowInputs(propertyName);
             html.Append(cell);
             html.Append(cell);
+            for (int i = 0; i < extraProperties; i++)
+            {
+                html.Append(cell);
+            }
             html.Append(button);
             html.Append(inputs);
             // Generate the row
@@ -233,7 +300,7 @@ namespace Sandtrap.Web.Html
         }
 
         // Generates the cell containing the file input for selecting a file
-        public static string FooterRowInputs(string propertyName)
+        private static string FooterRowInputs(string propertyName)
         {
             TagBuilder fileInput = new TagBuilder("input");
             fileInput.MergeAttribute("type", "file");
@@ -245,15 +312,22 @@ namespace Sandtrap.Web.Html
         }
 
         // Generates the hidden tbody element that is cloned when adding new files
-        public static string HiddenRow(string propertyName)
+        private static string HiddenRow(HtmlHelper helper, Type modelType, string propertyName, IEnumerable<string> extraColumns)
         {
+            // Create an instance of the type so default values are rendered
+            object instance = Activator.CreateInstance(modelType);
+            ModelMetadata itemMetadata = ModelMetadataProviders.Current
+                .GetMetadataForType(() => instance, modelType);
             // Generate table cells
             StringBuilder html = new StringBuilder();
             string cell = TableCell(string.Empty);
+            html.Append(cell);
+            string prefix = String.Format("{0}[#]", propertyName);
+            string formControls = EditableFormControls(helper, itemMetadata, prefix, extraColumns);
+            html.Append(formControls);
+            html.Append(cell);
             string button = ButtonCell(ButtonType.Delete);
             string input = HiddenRowInputs(propertyName);
-            html.Append(cell);
-            html.Append(cell);
             html.Append(button);
             html.Append(input);
             // Generate the table row
@@ -268,7 +342,7 @@ namespace Sandtrap.Web.Html
         }
 
         // Generates the cell containing the input for the collection indexer
-        public static string HiddenRowInputs(string propertyName)
+        private static string HiddenRowInputs(string propertyName)
         {
             TagBuilder indexer = new TagBuilder("input");
             indexer.MergeAttribute("type", "hidden");
@@ -280,13 +354,18 @@ namespace Sandtrap.Web.Html
         }
 
         // Generates the thead element
-        public static string DisplayHeader()
+        private static string DisplayHeader(IEnumerable<string> extraColumns)
         {
             // Generate the cells
             StringBuilder html = new StringBuilder();
             string fileNameHeader = HeaderCell("File name");
-            string fileSizeHeader = HeaderCell("File size");
             html.Append(fileNameHeader);
+            foreach (string heading in extraColumns)
+            {
+                string headerCell = HeaderCell(heading);
+                html.Append(headerCell);
+            }
+            string fileSizeHeader = HeaderCell("File size");
             html.Append(fileSizeHeader);
             // Generate the row
             TagBuilder row = new TagBuilder("tr");
@@ -298,13 +377,13 @@ namespace Sandtrap.Web.Html
         }
 
         // Generates the tbody element
-        public static string DisplayBody(HtmlHelper helper, IEnumerable<IFileAttachment> attachments, string downloadActionName)
+        private static string DisplayBody(HtmlHelper helper, Type modelType, IEnumerable<IFileAttachment> attachments, IEnumerable<string> extraColumns, string actionName, string controllerName)
         {
             StringBuilder html = new StringBuilder();
             // Add table rows
             foreach (IFileAttachment attachment in attachments)
             {
-                html.Append(DisplayRow(helper, attachment, downloadActionName));
+                html.Append(DisplayRow(helper, modelType, attachment, extraColumns, actionName, controllerName));
             }
             // Generate tbody
             TagBuilder body = new TagBuilder("tbody");
@@ -313,17 +392,38 @@ namespace Sandtrap.Web.Html
         }
 
         // Generates a row in the tbody element
-        public static string DisplayRow(HtmlHelper helper, IFileAttachment attachment, string downloadActionName)
+        private static string DisplayRow(HtmlHelper helper, Type modelType, IFileAttachment attachment, IEnumerable<string> extraColumns, string actionName, string controllerName)
         {
+            // Get the ModelMetadata for the attachment
+            ModelMetadata itemMetadata = ModelMetadataProviders.Current.GetMetadataForType(() => attachment, modelType);
+
             StringBuilder html = new StringBuilder();
             // Generate link
             object routeValues = new { ID = attachment.ID.Value };
             object htmlAttributes = new { target = "_blank" };
-            var link = helper.ActionLink(attachment.DisplayName, downloadActionName, routeValues, htmlAttributes);
+            var link = helper.ActionLink(attachment.DisplayName, actionName, controllerName, routeValues, htmlAttributes);
             // Add table cells
             TagBuilder cell = new TagBuilder("td");
             cell.InnerHtml = link.ToString();
             html.Append(cell.ToString());
+            foreach (string propertyName in extraColumns)
+            {
+                ModelMetadata metaData = itemMetadata.Properties.FirstOrDefault(x => x.PropertyName == propertyName);
+                if (metaData.Model == null)
+                {
+                    cell.InnerHtml = metaData.NullDisplayText;
+                }
+                else if (metaData.ModelType == typeof(Nullable<bool>) || metaData.ModelType == typeof(bool))
+                {
+                    cell.InnerHtml = (bool)metaData.Model ? "Yes" : "No";
+                }
+                else
+                {
+                    string formatString = metaData.DisplayFormatString ?? "{0}";
+                    cell.InnerHtml = String.Format(formatString, metaData.Model);
+                }
+                html.Append(cell.ToString());
+            }
             cell.InnerHtml = string.Format("{0} KB", attachment.Size);
             html.Append(cell.ToString());
             // Generate table row
@@ -333,7 +433,7 @@ namespace Sandtrap.Web.Html
         }
 
         // Geneates a th element
-        public static string HeaderCell(string text, string className = null)
+        private static string HeaderCell(string text, string className = null)
         {
             TagBuilder cell = new TagBuilder("th");
             if (className != null)
@@ -345,7 +445,7 @@ namespace Sandtrap.Web.Html
         }
 
         // Geneates a td element
-        public static string TableCell(string text)
+        private static string TableCell(string text)
         {
             TagBuilder div = new TagBuilder("div");
             div.AddCssClass("table-text");
@@ -355,17 +455,76 @@ namespace Sandtrap.Web.Html
             return cell.ToString();
         }
 
+        // Generates the editable form controls in a tr element
+        private static string EditableFormControls(HtmlHelper helper, ModelMetadata fileMetatdata, string prefix, IEnumerable<string> extraColumns)
+        {
+            StringBuilder html = new StringBuilder();
+            foreach (string column in extraColumns)
+            {
+                ModelMetadata metaData = fileMetatdata.Properties.FirstOrDefault(x => x.PropertyName == column);
+                string name = String.Format("{0}.{1}", prefix, column);
+                object value = metaData.Model;
+                // TODO: If ModelType is Nullable<bool>, generate select
+                // TODO: If [Select] attribute, generate select
+                if (metaData.DataTypeName == "MultilineText")
+                {
+                    string textAreaCell = TextAreaCell(helper, name, value);
+                    html.Append(textAreaCell);
+                }
+                else if (metaData.ModelType == typeof(bool))
+                {
+                    string checkBoxCell = CheckboxCell(helper, name, (bool)metaData.Model);
+                    html.Append(checkBoxCell);
+                }
+                else
+                {
+                    string textBoxCell = TextBoxCell(helper, name, value);
+                    html.Append(textBoxCell);
+                }
+            }
+            return html.ToString();
+        }
+
+        // Generates a td element containing a textbox
+        private static string TextBoxCell(HtmlHelper helper, string name, object value)
+        {
+            // TODO: Add ValidationMessageFor()
+            var editor = helper.TextBox(name, value, new { id = "", @class = "table-control" });
+            TagBuilder cell = new TagBuilder("td");
+            cell.InnerHtml = editor.ToString();
+            return cell.ToString();
+        }
+
+        // Generates a td element containing a textarea
+        private static string TextAreaCell(HtmlHelper helper, string name, object value)
+        {
+            // TODO: Add ValidationMessageFor()
+            MvcHtmlString editor = helper.TextArea(name, (value ?? string.Empty).ToString(), new { id = "", @class = "table-control" });
+            TagBuilder cell = new TagBuilder("td");
+            cell.InnerHtml = editor.ToString();
+            return cell.ToString();
+        }
+
+        // Generates a td element containing a checkbox
+        private static string CheckboxCell(HtmlHelper helper, string name, bool isChecked)
+        {
+            // TODO: Add ValidationMessageFor()
+            MvcHtmlString editor = helper.CheckBox(name, isChecked, new { id = "", @class = "table-control" });
+            TagBuilder cell = new TagBuilder("td");
+            cell.InnerHtml = editor.ToString();
+            return cell.ToString();
+        }
+
         // Geneates a td element
-        public static string FooterCell(string text)
+        private static string FooterCell(string text)
         {
             TagBuilder cell = new TagBuilder("td");
             cell.InnerHtml = text;
             return cell.ToString();
-
         }
 
         // Geneates a td element containing a button to add and delete table rows
-        public static string ButtonCell(ButtonType type)
+        private static string ButtonCell(ButtonType type)
         {
             TagBuilder button = new TagBuilder("button");
             button.AddCssClass("table-button");
