@@ -37,7 +37,7 @@ table .table-text {
 }
 
 .field-validation-error {
-    color: red;
+    color: #e80c4d;
 }
 
 /* Readonly table */
