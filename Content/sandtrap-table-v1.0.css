@@ -36,6 +36,10 @@ table .table-text {
     text-overflow:ellipsis;
 }
 
+.field-validation-error {
+    color: red;
+}
+
 /* Readonly table */
 .readonly-table th {
     padding: 2px;
