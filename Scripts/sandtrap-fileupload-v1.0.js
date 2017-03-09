@@ -86,14 +86,25 @@
         // Rename other inputs
         var inputs = newRow.find('.table-control');
         $.each(inputs, function () {
-            name = $(this).attr('name');
-            $(this).attr('name', name.replace('#', index));
+            name = $(this).attr('name').replace('#', index);
+            $(this).attr('name', name);
             if ($(this).is(':checkbox')) {
-                $(this).next().attr('name', name.replace('#', index));
+                $(this).next().attr('name', name);
             }
+            // Rename validation message element
+            $(this).siblings('span[data-valmsg-for]').attr('data-valmsg-for', name);
         })
         // Add new row
         this.body.append(newRow);
+
+        // Reparse the validator
+        // TODO: Get the unobtrusive validation - this.form.data(unobtrusiveValidation);
+        // and add the rules for the new elements to save reparsing the whole form
+        // https://xhalent.wordpress.com/2011/01/24/applying-unobtrusive-validation-to-dynamic-content/
+        if ($.validator) {
+            this.form.data('validator', null);
+            $.validator.unobtrusive.parse(this.form)
+        }
         inputs.first().focus();
     }
 
