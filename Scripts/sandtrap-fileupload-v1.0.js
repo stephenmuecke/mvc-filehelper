@@ -74,7 +74,13 @@
         // Update the display values
         var cells = newRow.find('.table-text');
         cells.eq(0).text(file.name);
-        cells.eq(1).text(Math.round(file.size / 1024) + ' KB');
+        var size = Math.round(file.size / 1024);
+        var units = 'kB';
+        if (size >= 1024) {
+            size = (file.size / 1024 / 1024).toFixed(2);
+            units = 'MB';
+        }
+        cells.eq(1).text(size + ' ' + units);
         // Clone the file input and add to the DOM
         var clone = fileInput.clone();
         clone.val('');
