@@ -16,9 +16,7 @@ A set of `HtmlHelper` extension methods, a jquery plug-in and utility methods to
 
 #### Model
 
-<!-- language: c# -->
-```
-
+```c#
 // Describes a job application where a user can upload documents associated with the application
 public class JobApplicationVM
 {
@@ -44,6 +42,21 @@ public enum DocumentType
 }
 ```
 
+### View
+
+```c#
+@model JobApplicationVM
+....
+@using (Html.BeginForm())
+{
+    ....
+    @Html.FileAttachmentEditorFor(m => m.Documents)
+```
+
+will generate the following view
+
+<img src="/Images/file-attachment-edit.png" />
+
 
 ### To Do
 - Support for bootstrap
@@ -55,4 +68,4 @@ public enum DocumentType
 
 <img src="/Images/file-attachment-display.png" />
 
-<img src="/Images/file-attachment-edit.png" />
+
