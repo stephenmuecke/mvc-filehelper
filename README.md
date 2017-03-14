@@ -14,7 +14,7 @@ A set of `HtmlHelper` extension methods, a jquery plug-in and utility methods to
 
 ### HtmlHelper methods
 
-#### Model
+#### Sample Model
 
 ```c#
 // Describes a job application where a user can upload documents associated with the application
@@ -46,7 +46,7 @@ public enum DocumentType
 }
 ```
 
-#### View
+#### FileAttachmentEditorFor() method
 
 ```c#
 @model JobApplicationVM
@@ -72,6 +72,10 @@ For additional properties in the model, the following form controls are generate
 - An `<input type="text" .. />` if none of the above conditions are met. If the property has a `[DataList("xxx")]` attribute, where `xxx` is the name of a property in the parent view model that implements `IEnumerable<string>`, a `<datalist>` element is rendered to provide a basic auto-complete feature.
 
 Client side validation is included for all form controls, included in dynamically added rows.
+
+#### FileAttachmentEditorFor() method
+
+xxxx
 
 ### FileHelper methods
 
