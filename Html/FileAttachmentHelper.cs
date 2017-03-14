@@ -247,7 +247,7 @@ namespace Sandtrap.Web.Html
                     List<SelectListItem> selectList = new List<SelectListItem>();
                     if (item.optionLabel != null)
                     {
-                        selectList.Add(new SelectListItem() { Value = null, Text = (string)item.optionLabel });
+                        selectList.Add(new SelectListItem() { Value = "", Text = (string)item.optionLabel });
                     }
                     foreach (var option in options)
                     {
@@ -257,8 +257,9 @@ namespace Sandtrap.Web.Html
                 }
                 return optionsLists;
             }
-            return new Dictionary<string, object>();
+            return new Dictionary<string,object>();
         }
+
 
         // Gets the collection of properties implemented in the model, but not the interface.
         private static IEnumerable<ModelMetadata> GetExtraProperties(Type type)
