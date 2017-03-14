@@ -326,7 +326,12 @@ namespace Sandtrap.Web.Html
             string prefix = String.Format("{0}[{1}]", propertyName, index);
             string formControls = EditableFormControls(helper, itemMetadata, prefix, extraColumns, optionLists);
             html.Append(formControls);
-            string fileSize = TableCell(string.Format("{0} KB", attachment.Size));
+            string size = String.Format("{0} kB", attachment.Size);
+            if (attachment.Size >= 1024)
+            {
+                size = String.Format("{0:0.00} MB", attachment.Size / 1024F);
+            }
+            string fileSize = TableCell(size);
             string button = ButtonCell(ButtonType.Delete);
             string inputs = EditRowInputs(attachment, propertyName, index);
             html.Append(fileSize);
