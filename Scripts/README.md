@@ -4,7 +4,7 @@ When using the `@Html.FileAttachmentEditorFor(m => m.SomeProperty)` method to ge
 ```js
 <script src="~/Scripts/sandtrap-fileupload-v1.0.js"></script>
 <script>
-    $('#Documents').fileUpload();
+    $('#SomeProperty').fileUpload();
 </script>
 ```
 
