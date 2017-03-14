@@ -16,30 +16,33 @@ A set of `HtmlHelper` extension methods, a jquery plug-in and utility methods to
 
 #### Model
 
-    // Describes a job application where a user can upload documents associated with the application
-    public class JobApplicationVM
-    {
-        ....
-        public IEnumerable<ApplicationDocumentVM> Documents { get; set; }
-    }
-    public class ApplicationDocumentVM : IFileAttachment
-    {
-        .... // implemented properties of IFileAttachment
-        [Required(ErrorMessage = "Please enter a description")]
-        public string Description { get; set; }
-        [Display(Name = "Category")]
-        [Required(ErrorMessage = "Select a category")]
-        [DisplayFormat(NullDisplayText = "Please select")]
-        public DocumentType? DocumentType { get; set; }
-        [Display(Name = "Confidential")]
-        public bool IsConfidential { get; set; }
-    }
-    public enum DocumentType
-    {
-        Qualification,
-        Reference
-    }
+<!-- language: c# -->
+```
 
+// Describes a job application where a user can upload documents associated with the application
+public class JobApplicationVM
+{
+    ....
+    public IEnumerable<ApplicationDocumentVM> Documents { get; set; }
+}
+public class ApplicationDocumentVM : IFileAttachment
+{
+    .... // implemented properties of IFileAttachment
+    [Required(ErrorMessage = "Please enter a description")]
+    public string Description { get; set; }
+    [Display(Name = "Category")]
+    [Required(ErrorMessage = "Select a category")]
+    [DisplayFormat(NullDisplayText = "Please select")]
+    public DocumentType? DocumentType { get; set; }
+    [Display(Name = "Confidential")]
+    public bool IsConfidential { get; set; }
+}
+public enum DocumentType
+{
+    Qualification,
+    Reference
+}
+```
 
 
 ### To Do
