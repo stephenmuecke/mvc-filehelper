@@ -61,6 +61,14 @@ will generate the following view
 
 <img src="/Images/file-attachment-edit.png" />
 
+The green '+' footer button opens the dialog to select a new file. The red '-' button marks an uploaded file for deletion (the button becomes a blue '+' button to toggle the action), of if the file has not been saved, removes the row.
+
+For additional properties in the model, the following form controls are generated:
+- A `<textarea>` for `string` if the property is decorated with `[DataType(DataType.Multiline)]` attribute.
+- A `<input type="checkbox" .. />` if the property is `bool`.
+- A `<select>` if the property is `Nullable<bool>`. The text for the `null` option is defined by using the `[DisplayFormat(NullDisplayText = ".....")]` attribute.
+- A `<select>` if the property is `enum` or `Nullable<enum>`. The text for the `null` option is defined by using the `[DisplayFormat(NullDisplayText = ".....")]` attribute.
+
 
 ### To Do
 - Support for bootstrap
