@@ -257,7 +257,7 @@ namespace Sandtrap.Web.Html
                 }
                 return optionsLists;
             }
-            return null;
+            return new Dictionary<string, object>();
         }
 
         // Gets the collection of properties implemented in the model, but not the interface.
