@@ -1,39 +1,38 @@
 ﻿table {
-    table-layout:fixed;
-    border-collapse:collapse;
-    width:100%;
+    table-layout: fixed;
+    border-collapse: collapse;
+    width: 100%;
     margin: 5px 0;
 }
 
 thead {
-    background-color:#f2f2f2;
-    border-top:solid 1px #ccc;
+    background-color: #f2f2f2;
+    border-top: solid 1px #ccc;
 }
 
 tr {
-    border-bottom:solid 1px #ccc;
+    border-bottom: solid 1px #ccc;
 }
 
 th {
     font-size: 1.0em;
-    font-weight:normal;
-    text-align:left;
-    box-sizing:border-box;
-    /*padding:1px 2px;*/
+    font-weight: normal;
+    text-align: left;
+    box-sizing: border-box;
 }
 
-td {
-    vertical-align:top;
+td > * {
+    vertical-align: middle;
 }
 
 tfoot {
-    background-color:#f2f2f2;
+    background-color: #f2f2f2;
 }
 
 table .table-text {
-    overflow:hidden;
-    white-space:nowrap;
-    text-overflow:ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
 }
 
 .field-validation-error {
@@ -48,9 +47,10 @@ table .table-text {
 .readonly-table td {
     padding: 2px;
 }
-.readonly-table td a {
-    padding: 0px;
-}
+
+    .readonly-table td a {
+        padding: 0px;
+    }
 
 /* Edit table */
 .edit-table th {
@@ -58,11 +58,11 @@ table .table-text {
 }
 
 .edit-table .table-text {
-    padding: 5px 4px 4px 4px;
+    padding: 4px;
 }
 
-.edit-table tfoot td {
-    padding: 4px 5px;
+.edit-table tfoot .button-cell {
+    padding: 4px;
 }
 
 /* Controls */
@@ -81,8 +81,9 @@ table .table-text {
     padding: 3px;
     background: #fff;
     font: inherit;
-    color:inherit;
+    color: inherit;
     margin: 0;
+    line-height: 1.4;
     min-height: 28px;
 }
 
@@ -100,20 +101,19 @@ table .table-text {
 }
 
 .edit-table input[type='checkbox'] {
-    width: 13px;
-    margin:7px auto 0 auto;
+    min-height: 15px;
 }
 
 .edit-table .button-header-cell {
-    width:30px;
+    width: 30px;
 }
+
 .edit-table .hidden-header-cell {
-    width:0;
+    width: 0;
 }
 
 .edit-table .button-cell {
     text-align: center;
-    vertical-align: middle;
     background-color: #f2f2f2;
 }
 
