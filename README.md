@@ -12,7 +12,7 @@ A set of `HtmlHelper` extension methods, a jquery plug-in and utility methods to
 - To provide client side validation for dynamically added files and their associated properties
 - To allow the view to be returned in a `[HttpPost]` method (when `ModelState` is invalid) without having to re-select files
 
-### Example
+### Usage
 
 #### Model
 
@@ -46,7 +46,7 @@ public enum DocumentType
 }
 ```
 
-### View
+#### View
 
 ```c#
 @model JobApplicationVM
@@ -72,6 +72,21 @@ For additional properties in the model, the following form controls are generate
 - An `<input type="text" .. />` if none of the above conditions are met. If the property has a `[DataList("xxx")]` attribute, where `xxx` is the name of a property in the parent view model that implements `IEnumerable<string>`, a `<datalist>` element is rendered to provide a basic auto-complete feature.
 
 Client side validation is included for all form controls, included in dynamically added rows.
+
+### FileHelper methods
+
+```c#
+[HttpPost]
+public ActionResult Edit(JobApplicationVM model)
+{
+    if (!ModelState.IsValid)
+    {
+        FileHelper.Save(model.Documents, "~/App_Data/Files", false);
+        return View(model);
+    }      
+    FileHelper.Save(modelDocuments, "~/App_Data/Files", false);
+    // Get the data model, update from the view model, save and redirect
+}
 
 
 ### To Do
