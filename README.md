@@ -12,7 +12,7 @@ A set of `HtmlHelper` extension methods, a jquery plug-in and utility methods to
 - To provide client side validation for dynamically added files and their associated properties
 - To allow the view to be returned in a `[HttpPost]` method (when `ModelState` is invalid) without having to re-select files
 
-### Usage
+### HtmlHelper methods
 
 #### Model
 
@@ -87,7 +87,7 @@ public ActionResult Edit(JobApplicationVM model)
     FileHelper.Save(modelDocuments, "~/App_Data/Files", false);
     // Get the data model, update from the view model, save and redirect
 }
-
+```
 
 ### To Do
 - Support for bootstrap
