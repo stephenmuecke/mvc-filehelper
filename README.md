@@ -71,12 +71,15 @@ For additional properties in the model, the following form controls are generate
 - A `<select>` if the property has the `[DropDownList("xxx")]` attribute, where `xxx` is the name of a property in the parent view model that implements `IEnumerable<SelectListItem>`. The text for the `null` option is defined by using the `[DisplayFormat(NullDisplayText = ".....")]` attribute.
 - An `<input type="text" .. />` if none of the above conditions are met. If the property has a `[DataList("xxx")]` attribute, where `xxx` is the name of a property in the parent view model that implements `IEnumerable<string>`, a `<datalist>` element is rendered to provide a basic auto-complete feature.
 
+Client side validation is included for all form controls, included in dynamically added rows.
+
 
 ### To Do
 - Support for bootstrap
 - Resource file for error messages, defaults etc.
 - Render validation mesages in separate row so vertical alignment of form controls not affected
 - Add client and server side validation for HttpPostedFileBase property (file size, file type)
+- Re-parse the `$.validator` for each dynamically added form control, rather that re-parsing the whole form each time a file is added
 
 
 
