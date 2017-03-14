@@ -14,6 +14,14 @@ A set of `HtmlHelper` extension methods, a jquery plug-in and utility methods to
 
 
 
+
+### TODO
+- Resource file for error messages, defaults etc.
+- Render validation mesages in separate row so vertical alignment of form controls not affected
+- Add client and server side validation for HttpPostedFileBase property (file size, file type)
+
+
+
 <img src="/Images/file-attachment-display.png" />
 
 <img src="/Images/file-attachment-edit.png" />
