@@ -64,10 +64,12 @@ will generate the following view
 The green '+' footer button opens the dialog to select a new file. The red '-' button marks an uploaded file for deletion (the button becomes a blue '+' button to toggle the action), of if the file has not been saved, removes the row.
 
 For additional properties in the model, the following form controls are generated:
-- A `<textarea>` for `string` if the property is decorated with `[DataType(DataType.Multiline)]` attribute.
-- A `<input type="checkbox" .. />` if the property is `bool`.
+- A `<textarea>` if the property is `string` and has the `[DataType(DataType.Multiline)]` attribute.
+- An `<input type="checkbox" .. />` if the property is `bool`.
 - A `<select>` if the property is `Nullable<bool>`. The text for the `null` option is defined by using the `[DisplayFormat(NullDisplayText = ".....")]` attribute.
 - A `<select>` if the property is `enum` or `Nullable<enum>`. The text for the `null` option is defined by using the `[DisplayFormat(NullDisplayText = ".....")]` attribute.
+- A `<select>` if the property has the `[DropDownList("xxx")]` attribute, where `xxx` is the name of a property in the parent view model that implements `IEnumerable<SelectListItem>`. The text for the `null` option is defined by using the `[DisplayFormat(NullDisplayText = ".....")]` attribute.
+- An `<input type="text" .. />` if none of the above conditions are met. If the property has a `[DataList("xxx")]` attribute, where `xxx` is the name of a property in the parent view model that implements `IEnumerable<string>`, a `<datalist>` element is rendered to provide a basic auto-complete feature.
 
 
 ### To Do
