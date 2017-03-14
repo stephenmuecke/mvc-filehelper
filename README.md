@@ -12,6 +12,33 @@ A set of `HtmlHelper` extension methods, a jquery plug-in and utility methods to
 - To provide client side validation for dynamically added files and their associated properties
 - To allow the view to be returned in a `[HttpPost]` method (when `ModelState` is invalid) without having to re-select files
 
+### Example
+
+#### Model
+
+    // Describes a job application where a user can upload documents associated with the application
+    public class JobApplicationVM
+    {
+        ....
+        public IEnumerable<ApplicationDocumentVM> Documents { get; set; }
+    }
+    public class ApplicationDocumentVM : IFileAttachment
+    {
+        .... // implemented properties of IFileAttachment
+        [Required(ErrorMessage = "Please enter a description")]
+        public string Description { get; set; }
+        [Display(Name = "Category")]
+        [Required(ErrorMessage = "Select a category")]
+        [DisplayFormat(NullDisplayText = "Please select")]
+        public DocumentType? DocumentType { get; set; }
+        [Display(Name = "Confidential")]
+        public bool IsConfidential { get; set; }
+    }
+    public enum DocumentType
+    {
+        Qualification,
+        Reference
+    }
 
 
 
