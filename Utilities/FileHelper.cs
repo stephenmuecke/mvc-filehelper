@@ -5,6 +5,7 @@ using System.Web;
 using System.Web.Mvc;
 using Sandtrap.Web.Models;
 
+
 namespace Sandtrap.Web.Utilities
 {
 
@@ -83,16 +84,16 @@ namespace Sandtrap.Web.Utilities
         public static FileResult Download(IFileAttachment attachment)
         {
             // Validate
+            if (attachment == null)
+            {
+                throw new ArgumentNullException(nullAttachment);
+            }
             if (attachment.VirtualPath == null)
             {
                 throw new ArgumentNullException(nullPath);
             }
-            if (attachment.DisplayName == null)
-            {
-                attachment.DisplayName = Path.GetFileName(attachment.VirtualPath);
-            }
             // Return FileResult
-            return Download(attachment.VirtualPath, attachment.DisplayName);
+            return Download(attachment.VirtualPath);
         }
 
         /// <summary>
@@ -104,20 +105,12 @@ namespace Sandtrap.Web.Utilities
         /// <param name="displayName">
         /// The files display name to be returned to the browser.
         /// </param>
-        public static FileResult Download(string path, string displayName)
+        public static FileResult Download(string path)
         {
             // Validate
-            if (attachment == null)
-            {
-                throw new ArgumentNullException(nullAttachment);
-            }
             if (path == null)
             {
                 throw new ArgumentNullException(nullPath);
-            }
-            if (displayName == null)
-            {
-                displayName = Path.GetFileName(path);
             }
             // Get the physical path
             string physicalPath = HttpContext.Current.Server.MapPath(path);
