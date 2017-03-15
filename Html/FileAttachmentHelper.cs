@@ -180,7 +180,7 @@ namespace Sandtrap.Web.Html
 
         #region .Helper methods 
 
-        // Gets the data usd to generate datalists and selectlists 
+        // Gets the data used to generate datalists and selectlists 
         private static Dictionary<string, object> GetOptionLists(ModelMetadata itemMetadata, object parentModel)
         {
             // Get datalists
@@ -260,7 +260,6 @@ namespace Sandtrap.Web.Html
             return new Dictionary<string,object>();
         }
 
-
         // Gets the collection of properties implemented in the model, but not the interface.
         private static IEnumerable<ModelMetadata> GetExtraProperties(Type type)
         {
@@ -307,6 +306,10 @@ namespace Sandtrap.Web.Html
             {
                 string tableRow = EditRow(helper, modelType, attachment, propertyName, rowNumber, extraProperties, optionLists);
                 html.Append(tableRow);
+
+                string validationRow = ValidationRow(helper, propertyName, rowNumber, extraProperties);
+                html.Append(validationRow);
+
                 rowNumber++;
             }
             TagBuilder body = new TagBuilder("tbody");
@@ -314,7 +317,7 @@ namespace Sandtrap.Web.Html
             return body.ToString();
         }
 
-        // Generates a row in the visible tbody element
+        // Generates the row for editing data in the visible tbody element
         private static string EditRow(HtmlHelper helper, Type modelType, IFileAttachment attachment, string propertyName, int index, IEnumerable<string> extraColumns, Dictionary<string, object> optionLists)
         {
             // Get the ModelMetadata for the attachment
@@ -324,7 +327,7 @@ namespace Sandtrap.Web.Html
             string displayName = TableCell(attachment.DisplayName);
             html.Append(displayName);
             string prefix = String.Format("{0}[{1}]", propertyName, index);
-            string formControls = EditableFormControls(helper, itemMetadata, prefix, extraColumns, optionLists);
+            string formControls = EditRowControlCells(helper, itemMetadata, prefix, extraColumns, optionLists);
             html.Append(formControls);
             string size = String.Format("{0} kB", attachment.Size);
             if (attachment.Size >= 1024)
@@ -333,12 +336,13 @@ namespace Sandtrap.Web.Html
             }
             string fileSize = TableCell(size);
             string button = ButtonCell(ButtonType.Delete);
-            string inputs = EditRowInputs(attachment, propertyName, index);
+            string inputs = EditRowHiddenInputs(attachment, propertyName, index);
             html.Append(fileSize);
             html.Append(button);
             html.Append(inputs);
             // Generate table row
             TagBuilder row = new TagBuilder("tr");
+            row.AddCssClass("edit-row");
             if (attachment.Status == FileAttachmentStatus.Deleted)
             {
                 row.AddCssClass("archived");
@@ -347,8 +351,85 @@ namespace Sandtrap.Web.Html
             return row.ToString();
         }
 
-        // Generates the cell containing the inputs for binding
-        private static string EditRowInputs(IFileAttachment attachment, string propertyName, int index)
+        // Generates the editable form controls in a tr element
+        private static string EditRowControlCells(HtmlHelper helper, ModelMetadata fileMetatdata, string prefix, IEnumerable<string> extraColumns, Dictionary<string, object> optionLists)
+        {
+            StringBuilder html = new StringBuilder();
+            foreach (string column in extraColumns)
+            {
+                // TODO: Add data list
+                ModelMetadata metaData = fileMetatdata.Properties.FirstOrDefault(x => x.PropertyName == column);
+                string name = String.Format("{0}.{1}", prefix, column);
+                Type type = metaData.ModelType;
+                if (Nullable.GetUnderlyingType(type) != null)
+                {
+                    type = Nullable.GetUnderlyingType(type);
+                }
+                if (metaData.DataTypeName == "MultilineText")
+                {
+                    string textAreaCell = TextAreaCell(helper, name, metaData);
+                    html.Append(textAreaCell);
+                }
+                else if (metaData.ModelType == typeof(bool))
+                {
+                    string checkBoxCell = CheckboxCell(helper, name, metaData);
+                    html.Append(checkBoxCell);
+                }
+                else if (metaData.ModelType == typeof(bool?))
+                {
+                    bool? defaultValue = (bool?)metaData.Model;
+                    List<SelectListItem> selectList = new List<SelectListItem>()
+                    {
+                        new SelectListItem(){ Value = "", Text = "", Selected = !defaultValue.HasValue }, // TODO: Text from Resource File
+                        new SelectListItem(){ Value = "true", Text = "Yes", Selected = defaultValue.HasValue && defaultValue.Value },
+                        new SelectListItem(){ Value = "false", Text = "No", Selected = defaultValue.HasValue && !defaultValue.Value }
+                    };
+                    string selectCell = SelectCell(helper, name, metaData, selectList);
+                    html.Append(selectCell);
+                }
+                else if (type.IsEnum)
+                {
+                    string defaultValue = Convert.ToString(metaData.Model);
+                    List<SelectListItem> selectList = new List<SelectListItem>();
+                    var nullText = metaData.NullDisplayText;
+                    selectList.Add(new SelectListItem() { Value = "", Text = nullText });
+                    foreach (var item in Enum.GetNames(type))
+                    {
+                        selectList.Add(new SelectListItem() { Value = item, Text = item, Selected = (item == defaultValue) });
+                    }
+                    string selectCell = SelectCell(helper, name, metaData, selectList);
+                    html.Append(selectCell);
+                }
+                else if (metaData.AdditionalValues.ContainsKey(_SelectListKey))
+                {
+                    IEnumerable<SelectListItem> options = optionLists[column] as IEnumerable<SelectListItem>;
+                    List<SelectListItem> selectList = new List<SelectListItem>();
+                    string defaultValue = Convert.ToString(metaData.Model);
+                    foreach (SelectListItem item in options)
+                    {
+                        item.Selected = (item.Value != null) ? item.Value == defaultValue : item.Text == defaultValue;
+                        selectList.Add(item);
+                    }
+                    string selectCell = SelectCell(helper, name, metaData, selectList);
+                    html.Append(selectCell);
+                }
+                else if (metaData.AdditionalValues.ContainsKey(_DataListKey))
+                {
+                    IEnumerable<string> options = optionLists[column] as IEnumerable<string>;
+                    string dataListCell = DataListCell(helper, name, metaData, options);
+                    html.Append(dataListCell);
+                }
+                else
+                {
+                    string textBoxCell = TextBoxCell(helper, name, metaData);
+                    html.Append(textBoxCell);
+                }
+            }
+            return html.ToString();
+        }
+
+        // Generates the cell containing the hidden inputs for binding
+        private static string EditRowHiddenInputs(IFileAttachment attachment, string propertyName, int index)
         {
             StringBuilder html = new StringBuilder();
             // Generate the input for the collection indexer
@@ -393,6 +474,43 @@ namespace Sandtrap.Web.Html
             cell.InnerHtml = html.ToString();
             // Return the html
             return cell.ToString();
+        }
+
+        // Generates the alternate row containing validation messages for form controls
+        private static string ValidationRow(HtmlHelper helper, string propertyName, int index, IEnumerable<string> extraColumns)
+        {
+            string prefix = String.Format("{0}[{1}]", propertyName, index);
+            TagBuilder emptyCell = new TagBuilder("td");
+            // Build the html
+            StringBuilder html = new StringBuilder();
+            html.Append(emptyCell.ToString()); // file name
+            // Add validation cells
+            string validationCells = ValidationCells(helper, prefix, extraColumns);
+            html.Append(validationCells);
+            html.Append(emptyCell.ToString()); // file size
+            TagBuilder buttonCell = new TagBuilder("td");
+            buttonCell.AddCssClass("button-cell");
+            html.Append(buttonCell.ToString()); // buttons
+            html.Append(emptyCell.ToString()); // hidden inputs
+            TagBuilder row = new TagBuilder("tr");
+            row.AddCssClass("validation-row");
+            row.InnerHtml = html.ToString();
+            return row.ToString();
+        }
+
+        // Generates the validation message cells associated with form controls
+        private static string ValidationCells(HtmlHelper helper, string prefix, IEnumerable<string> extraColumns)
+        {
+            StringBuilder html = new StringBuilder();
+            foreach (string column in extraColumns)
+            {
+                string name = String.Format("{0}.{1}", prefix, column);
+                MvcHtmlString validation = helper.ValidationMessage(name);
+                TagBuilder cell = new TagBuilder("td");
+                cell.InnerHtml = validation.ToString();
+                html.Append(cell.ToString());
+            }
+            return html.ToString();
         }
 
         // Generates the tfoot element
@@ -440,7 +558,7 @@ namespace Sandtrap.Web.Html
             string cell = TableCell(string.Empty);
             html.Append(cell);
             string prefix = String.Format("{0}[#]", propertyName);
-            string formControls = EditableFormControls(helper, itemMetadata, prefix, extraColumns, optionLists);
+            string formControls = EditRowControlCells(helper, itemMetadata, prefix, extraColumns, optionLists);
             html.Append(formControls);
             html.Append(cell);
             string button = ButtonCell(ButtonType.Delete);
@@ -577,77 +695,6 @@ namespace Sandtrap.Web.Html
             return cell.ToString();
         }
 
-        // Generates the editable form controls in a tr element
-        private static string EditableFormControls(HtmlHelper helper, ModelMetadata fileMetatdata, string prefix, IEnumerable<string> extraColumns, Dictionary<string, object> optionLists)
-        {
-            StringBuilder html = new StringBuilder();
-            foreach (string column in extraColumns)
-            {
-                // TODO: Add data list
-                ModelMetadata metaData = fileMetatdata.Properties.FirstOrDefault(x => x.PropertyName == column);
-                string name = String.Format("{0}.{1}", prefix, column);
-                if (metaData.DataTypeName == "MultilineText")
-                {
-                    string textAreaCell = TextAreaCell(helper, name, metaData);
-                    html.Append(textAreaCell);
-                }
-                else if (metaData.ModelType == typeof(bool))
-                {
-                    string checkBoxCell = CheckboxCell(helper, name, metaData);
-                    html.Append(checkBoxCell);
-                }
-                else if (metaData.ModelType == typeof(bool?))
-                {
-                    bool? defaultValue = (bool?)metaData.Model;
-                    List<SelectListItem> selectList = new List<SelectListItem>()
-                    {
-                        new SelectListItem(){ Value = "", Text = "", Selected = !defaultValue.HasValue }, // TODO: Text from Resource File
-                        new SelectListItem(){ Value = "true", Text = "Yes", Selected = defaultValue.HasValue && defaultValue.Value },
-                        new SelectListItem(){ Value = "false", Text = "No", Selected = defaultValue.HasValue && !defaultValue.Value }
-                    };
-                    string selectCell = SelectCell(helper, name, metaData, selectList);
-                    html.Append(selectCell);
-                }
-                else if(metaData.ModelType.IsEnum)
-                {
-                    string defaultValue = Convert.ToString(metaData.Model);
-                    List<SelectListItem> selectList = new List<SelectListItem>();
-                    selectList.Add(new SelectListItem() { Value = null, Text = "" }); // TODO: Text from Resource File
-                    foreach (var item in Enum.GetNames(metaData.ModelType))
-                    {
-                        selectList.Add(new SelectListItem() { Text = item, Selected = (item == defaultValue) });
-                    }
-                    string selectCell = SelectCell(helper, name, metaData, selectList);
-                    html.Append(selectCell);
-                }
-                else if (metaData.AdditionalValues.ContainsKey(_SelectListKey))
-                {
-                    IEnumerable<SelectListItem> options = optionLists[column] as IEnumerable<SelectListItem>;
-                    List<SelectListItem> selectList = new List<SelectListItem>();
-                    string defaultValue = Convert.ToString(metaData.Model);
-                    foreach (SelectListItem item in options)
-                    {
-                        item.Selected = (item.Value != null) ? item.Value == defaultValue : item.Text == defaultValue;
-                        selectList.Add(item);
-                    }
-                    string selectCell = SelectCell(helper, name, metaData, selectList);
-                    html.Append(selectCell);
-                }
-                else if (metaData.AdditionalValues.ContainsKey(_DataListKey))
-                {
-                    IEnumerable<string> options = optionLists[column] as IEnumerable<string>;
-                    string dataListCell = DataListCell(helper, name, metaData, options);
-                    html.Append(dataListCell);
-                }
-                else
-                {
-                    string textBoxCell = TextBoxCell(helper, name, metaData);
-                    html.Append(textBoxCell);
-                }
-            }
-            return html.ToString();
-        }
-
         // Generates a td element containing a textbox
         private static string TextBoxCell(HtmlHelper helper, string name, ModelMetadata metadata)
         {
@@ -656,13 +703,9 @@ namespace Sandtrap.Web.Html
             htmlAttributes.Add("id", null);
             htmlAttributes.Add("class", "table-control");
             // Build html
-            StringBuilder html = new StringBuilder();
             MvcHtmlString textBox = helper.TextBox(name, metadata.Model, htmlAttributes);
-            html.Append(textBox.ToString());
-            MvcHtmlString validation = helper.ValidationMessage(name);
-            html.Append(validation.ToString());
             TagBuilder cell = new TagBuilder("td");
-            cell.InnerHtml = html.ToString();
+            cell.InnerHtml = textBox.ToString();
             return cell.ToString();
         }
 
@@ -674,13 +717,9 @@ namespace Sandtrap.Web.Html
             htmlAttributes.Add("id", null);
             htmlAttributes.Add("class", "table-control");
             // Build html
-            StringBuilder html = new StringBuilder();
             MvcHtmlString textArea = helper.TextArea(name, (metadata.Model ?? string.Empty).ToString(), htmlAttributes);
-            html.Append(textArea.ToString());
-            MvcHtmlString validation = helper.ValidationMessage(name);
-            html.Append(validation.ToString());
             TagBuilder cell = new TagBuilder("td");
-            cell.InnerHtml = html.ToString();
+            cell.InnerHtml = textArea.ToString();
             return cell.ToString();
         }
 
@@ -692,13 +731,9 @@ namespace Sandtrap.Web.Html
             htmlAttributes.Add("id", null);
             htmlAttributes.Add("class", "table-control");
             // Build html
-            StringBuilder html = new StringBuilder();
             MvcHtmlString checkbox = helper.CheckBox(name, (bool)metadata.Model, htmlAttributes);
-            html.Append(checkbox.ToString());
-            MvcHtmlString validation = helper.ValidationMessage(name);
-            html.Append(validation.ToString());
             TagBuilder cell = new TagBuilder("td");
-            cell.InnerHtml = html.ToString();
+            cell.InnerHtml = checkbox.ToString();
             return cell.ToString();
         }
 
@@ -710,13 +745,9 @@ namespace Sandtrap.Web.Html
             htmlAttributes.Add("id", null);
             htmlAttributes.Add("class", "table-control");
             // Build html
-            StringBuilder html = new StringBuilder();
             MvcHtmlString select = helper.DropDownList(name, selectList, htmlAttributes);
-            html.Append(select.ToString());
-            MvcHtmlString validation = helper.ValidationMessage(name);
-            html.Append(validation.ToString());
             TagBuilder cell = new TagBuilder("td");
-            cell.InnerHtml = html.ToString();
+            cell.InnerHtml = select.ToString();
             return cell.ToString();
         }
 
@@ -729,13 +760,9 @@ namespace Sandtrap.Web.Html
             htmlAttributes.Add("id", null);
             htmlAttributes.Add("class", "table-control");
             htmlAttributes.Add("list", id);
-            StringBuilder html = new StringBuilder();
             MvcHtmlString textBox = helper.TextBox(name, metadata.Model, htmlAttributes);
-            html.Append(textBox.ToString());
-            MvcHtmlString validation = helper.ValidationMessage(name);
-            html.Append(validation.ToString());
             TagBuilder cell = new TagBuilder("td");
-            cell.InnerHtml = html.ToString();
+            cell.InnerHtml = textBox.ToString();
             return cell.ToString();
         }
 
