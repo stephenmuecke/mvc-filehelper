@@ -34,6 +34,11 @@ table .table-text {
 }
 
 /* Readonly table */
+
+.readonly-table tbody tr {
+    border-bottom: solid #ccc 1px;
+}
+
 .readonly-table th {
     padding: 2px;
 }
