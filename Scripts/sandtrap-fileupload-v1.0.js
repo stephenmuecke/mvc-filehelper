@@ -92,14 +92,19 @@
         // Rename other inputs
         var inputs = newRow.find('.table-control');
         $.each(inputs, function () {
-            name = $(this).attr('name').replace('#', index);
+            var name = $(this).attr('name').replace('#', index);
             $(this).attr('name', name);
             if ($(this).is(':checkbox')) {
                 $(this).next().attr('name', name);
             }
-            // Rename validation message element
-            $(this).siblings('span[data-valmsg-for]').attr('data-valmsg-for', name);
         })
+        // Rename validation message elements
+        var validation = newRow.find('span[data-valmsg-for]');
+        $.each(validation, function () {
+            var name = $(this).attr('data-valmsg-for').replace('#', index);
+            $(this).attr('data-valmsg-for', name);
+        });
+
         // Add new row
         this.body.append(newRow);
 
