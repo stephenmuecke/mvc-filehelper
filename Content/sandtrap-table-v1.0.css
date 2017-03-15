@@ -8,9 +8,6 @@
 thead {
     background-color: #f2f2f2;
     border-top: solid 1px #ccc;
-}
-
-tr {
     border-bottom: solid 1px #ccc;
 }
 
@@ -27,16 +24,13 @@ td > * {
 
 tfoot {
     background-color: #f2f2f2;
+    border-bottom: solid #ccc 1px;
 }
 
 table .table-text {
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
-}
-
-.field-validation-error {
-    color: #e80c4d;
 }
 
 /* Readonly table */
@@ -53,8 +47,25 @@ table .table-text {
     }
 
 /* Edit table */
+
 .edit-table th {
     padding: 5px;
+}
+
+.edit-table .edit-row td {
+    padding: 1px;
+}
+
+.edit-table .validation-row {
+    border-bottom: solid #ccc 1px;
+}
+
+.edit-table .validation-row td {
+    padding: 0 3px;
+}
+
+.edit-table .field-validation-error {
+    color: #e80c4d;
 }
 
 .edit-table .table-text {
