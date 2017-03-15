@@ -1,7 +1,7 @@
 ﻿
 /*Details*/
 .file-attachments.readonly-table th:nth-child(2) {
-    width: 120px;
+    width: 80px;
     text-align: right;
 }
 
@@ -11,7 +11,7 @@
 
 /*Edit*/
 .file-attachments.edit-table th:nth-child(2) {
-    width: 120px;
+    width: 80px;
     text-align: right;
 }
 
