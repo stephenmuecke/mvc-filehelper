@@ -126,6 +126,6 @@ public ActionResult DownloadAttachment(int ID)
 
 
 
-<img src="/Images/file-attachment-display.png?" />
+<img src="/Images/file-attachment-display.png" />
 
 
