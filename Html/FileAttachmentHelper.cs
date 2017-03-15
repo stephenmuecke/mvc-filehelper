@@ -521,23 +521,16 @@ namespace Sandtrap.Web.Html
         private static string HiddenBody(HtmlHelper helper, ModelMetadata itemMetadata, string propertyName, IEnumerable<string> extraColumns, Dictionary<string, object> optionLists)
         {
             StringBuilder html = new StringBuilder();
-
             string editRow = HiddenRow(helper, itemMetadata, propertyName, extraColumns, optionLists);
             string validationRow = ValidationRow(helper, propertyName, "#", extraColumns);
-
             html.Append(editRow);
             html.Append(validationRow);
-
-
             // Generate the table body
             TagBuilder body = new TagBuilder("tbody");
             body.MergeAttribute("style", "display:none;");
             body.InnerHtml = html.ToString();
             // Return the html
             return body.ToString();
-
-
-            //return null;
         }
 
         // Generates the hidden row that is cloned when adding new files
@@ -561,16 +554,6 @@ namespace Sandtrap.Web.Html
             row.InnerHtml = html.ToString();
             // Return the html
             return row.ToString();
-
-
-
-
-            //// Generate the table body
-            //TagBuilder body = new TagBuilder("tbody");
-            //body.MergeAttribute("style", "display:none;");
-            //body.InnerHtml = row.ToString();
-            //// Return the html
-            //return body.ToString();
         }
 
         // Generates the cell containing the input for the collection indexer
@@ -698,7 +681,12 @@ namespace Sandtrap.Web.Html
                 }
                 html.Append(cell.ToString());
             }
-            cell.InnerHtml = string.Format("{0} KB", attachment.Size);
+            string size = String.Format("{0} kB", attachment.Size);
+            if (attachment.Size >= 1024)
+            {
+                size = String.Format("{0:0.00} MB", attachment.Size / 1024F);
+            }
+            cell.InnerHtml = size;
             html.Append(cell.ToString());
             // Generate table row
             TagBuilder row = new TagBuilder("tr");
