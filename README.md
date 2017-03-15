@@ -79,17 +79,41 @@ xxxx
 
 ### FileHelper methods
 
+The `FileHelper` class contains static methods that enscapulate common code for saving and downloading files.
+
+#### Save() method
+
+Saves uploaded files to the server (updates the properties each `IEnumerable<IFileAttachement>`) and optionally deletes files marked for deletion.
+
 ```c#
 [HttpPost]
 public ActionResult Edit(JobApplicationVM model)
 {
+    string folder = "~/App_Data/Files"; // define folder to save files
     if (!ModelState.IsValid)
     {
-        FileHelper.Save(model.Documents, "~/App_Data/Files", false);
+        FileHelper.Save(model.Documents, folder, false); // save new files only
         return View(model);
     }      
-    FileHelper.Save(modelDocuments, "~/App_Data/Files", false);
+    FileHelper.Save(modelDocuments, folder, true); // save and delete files
     // Get the data model, update from the view model, save and redirect
+}
+```
+
+#### Download() method
+
+Returns a `FileResult` to download a file.
+
+```c#
+public ActionResult DownloadAttachment(int ID)
+{
+    // .... Get the virtual path based on the ID (and optionally the display name if setting the ContentDisposition) 
+    
+    ContentDisposition disposition = new ContentDisposition { FileName = displayName, Inline = false };
+    Response.AddHeader("Content-Disposition", disposition.ToString());
+    
+    // Return the file
+    return FileHelper.Download(virtualPath);
 }
 ```
 
