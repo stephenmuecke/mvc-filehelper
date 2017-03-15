@@ -75,7 +75,15 @@ Client side validation is included for all form controls, included in dynamicall
 
 #### FileAttachmentDisplayFor() method
 
-xxxx
+```c#
+@model JobApplicationVM
+....
+@Html.FileAttachmentEditorFor(m => m.Documents)
+```
+
+will generate the following view
+
+<img src="/Images/file-attachment-readonly.png" />
 
 ### FileHelper methods
 
@@ -123,9 +131,5 @@ public ActionResult DownloadAttachment(int ID)
 - Render validation mesages in separate row so vertical alignment of form controls not affected
 - Add client and server side validation for HttpPostedFileBase property (file size, file type)
 - Re-parse the `$.validator` for each dynamically added form control, rather that re-parsing the whole form each time a file is added
-
-
-
-<img src="/Images/file-attachment-display.png" />
 
 
