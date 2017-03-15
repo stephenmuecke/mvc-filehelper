@@ -279,7 +279,6 @@ namespace Sandtrap.Web.Html
             // Generate the cells
             StringBuilder html = new StringBuilder();
             string fileNameHeader = HeaderCell("File name");
-            
             html.Append(fileNameHeader);
             foreach(string heading in extraColumns)
             {
@@ -310,10 +309,8 @@ namespace Sandtrap.Web.Html
             {
                 string tableRow = EditRow(helper, modelType, attachment, propertyName, rowNumber, extraProperties, optionLists);
                 html.Append(tableRow);
-
                 string validationRow = ValidationRow(helper, propertyName, rowNumber.ToString(), extraProperties);
                 html.Append(validationRow);
-
                 rowNumber++;
             }
             TagBuilder body = new TagBuilder("tbody");
