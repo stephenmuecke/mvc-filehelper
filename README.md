@@ -78,12 +78,14 @@ Client side validation is included for all form controls, included in dynamicall
 ```c#
 @model JobApplicationVM
 ....
-@Html.FileAttachmentDisplayFor(m => m.Documents)
+@Html.FileAttachmentDisplayFor(m => m.Documents, "DownloadAttachment", "JobApplication")
 ```
 
 will generate the following view
 
 <img src="/Images/file-attachment-readonly.png" />
+
+The links generated in the first column pass the `ID` of the `IFileAttachment` to the the `DownloadAttachment(int id)` method of `JobApplicationController`.
 
 ### FileHelper methods
 
