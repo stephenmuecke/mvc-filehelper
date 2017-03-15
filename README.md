@@ -78,7 +78,7 @@ Client side validation is included for all form controls, included in dynamicall
 ```c#
 @model JobApplicationVM
 ....
-@Html.FileAttachmentEditorFor(m => m.Documents)
+@Html.FileAttachmentDisplayFor(m => m.Documents)
 ```
 
 will generate the following view
