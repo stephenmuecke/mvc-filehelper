@@ -73,7 +73,7 @@ For additional properties in the model, the following form controls are generate
 
 Client side validation is included for all form controls, included in dynamically added rows.
 
-#### FileAttachmentEditorFor() method
+#### FileAttachmentDisplayFor() method
 
 xxxx
 
