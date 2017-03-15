@@ -141,7 +141,8 @@ namespace Sandtrap.Web.Html
             // Build html
             StringBuilder html = new StringBuilder();
             IEnumerable<string> extraColumns = extraProperties.Select(x => x.GetDisplayName());
-            html.Append(EditHeader(extraColumns));
+            string header = EditHeader(extraColumns);
+            html.Append(header);
             extraColumns = extraProperties.Select(x => x.PropertyName);
             if (attachments == null)
             {
@@ -150,10 +151,13 @@ namespace Sandtrap.Web.Html
             }
             else
             {
-                html.Append(EditBody(helper, modelType, attachments, propertyName, extraColumns, optionLists));
+                string body = EditBody(helper, modelType, attachments, propertyName, extraColumns, optionLists);
+                html.Append(body);
             }
-            html.Append(HiddenRow(helper, itemMetadata, propertyName, extraColumns, optionLists));
-            html.Append(EditFooter(propertyName, extraProperties.Count()));
+            string hiddenBody = HiddenBody(helper, itemMetadata, propertyName, extraColumns, optionLists);
+            html.Append(hiddenBody);
+            string footer = EditFooter(propertyName, extraProperties.Count());
+            html.Append(footer);
             TagBuilder table = new TagBuilder("table");
             table.AddCssClass("edit-table");
             table.AddCssClass("file-attachments");
@@ -307,7 +311,7 @@ namespace Sandtrap.Web.Html
                 string tableRow = EditRow(helper, modelType, attachment, propertyName, rowNumber, extraProperties, optionLists);
                 html.Append(tableRow);
 
-                string validationRow = ValidationRow(helper, propertyName, rowNumber, extraProperties);
+                string validationRow = ValidationRow(helper, propertyName, rowNumber.ToString(), extraProperties);
                 html.Append(validationRow);
 
                 rowNumber++;
@@ -477,7 +481,7 @@ namespace Sandtrap.Web.Html
         }
 
         // Generates the alternate row containing validation messages for form controls
-        private static string ValidationRow(HtmlHelper helper, string propertyName, int index, IEnumerable<string> extraColumns)
+        private static string ValidationRow(HtmlHelper helper, string propertyName, string index, IEnumerable<string> extraColumns)
         {
             string prefix = String.Format("{0}[{1}]", propertyName, index);
             TagBuilder emptyCell = new TagBuilder("td");
@@ -511,6 +515,74 @@ namespace Sandtrap.Web.Html
                 html.Append(cell.ToString());
             }
             return html.ToString();
+        }
+
+        // Generates the hidden tbody element that is cloned when adding new files
+        private static string HiddenBody(HtmlHelper helper, ModelMetadata itemMetadata, string propertyName, IEnumerable<string> extraColumns, Dictionary<string, object> optionLists)
+        {
+            StringBuilder html = new StringBuilder();
+
+            string editRow = HiddenRow(helper, itemMetadata, propertyName, extraColumns, optionLists);
+            string validationRow = ValidationRow(helper, propertyName, "#", extraColumns);
+
+            html.Append(editRow);
+            html.Append(validationRow);
+
+
+            // Generate the table body
+            TagBuilder body = new TagBuilder("tbody");
+            body.MergeAttribute("style", "display:none;");
+            body.InnerHtml = html.ToString();
+            // Return the html
+            return body.ToString();
+
+
+            //return null;
+        }
+
+        // Generates the hidden row that is cloned when adding new files
+        private static string HiddenRow(HtmlHelper helper, ModelMetadata itemMetadata, string propertyName, IEnumerable<string> extraColumns, Dictionary<string, object> optionLists)
+        {
+            // Generate table cells
+            StringBuilder html = new StringBuilder();
+            string cell = TableCell(string.Empty);
+            html.Append(cell);
+            string prefix = String.Format("{0}[#]", propertyName);
+            string formControls = EditRowControlCells(helper, itemMetadata, prefix, extraColumns, optionLists);
+            html.Append(formControls);
+            html.Append(cell);
+            string button = ButtonCell(ButtonType.Delete);
+            string input = HiddenRowInputs(propertyName);
+            html.Append(button);
+            html.Append(input);
+            // Generate the table row
+            TagBuilder row = new TagBuilder("tr");
+            row.AddCssClass("edit-row");
+            row.InnerHtml = html.ToString();
+            // Return the html
+            return row.ToString();
+
+
+
+
+            //// Generate the table body
+            //TagBuilder body = new TagBuilder("tbody");
+            //body.MergeAttribute("style", "display:none;");
+            //body.InnerHtml = row.ToString();
+            //// Return the html
+            //return body.ToString();
+        }
+
+        // Generates the cell containing the input for the collection indexer
+        private static string HiddenRowInputs(string propertyName)
+        {
+            TagBuilder indexer = new TagBuilder("input");
+            indexer.MergeAttribute("type", "hidden");
+            indexer.MergeAttribute("name", string.Format("{0}.Index", propertyName));
+            indexer.MergeAttribute("value", "#");
+            TagBuilder cell = new TagBuilder("td");
+            cell.InnerHtml = indexer.ToString();
+            return cell.ToString();
         }
 
         // Generates the tfoot element
@@ -547,44 +619,6 @@ namespace Sandtrap.Web.Html
             fileInput.MergeAttribute("style", "display:none");
             TagBuilder cell = new TagBuilder("td");
             cell.InnerHtml = fileInput.ToString();
-            return cell.ToString();
-        }
-
-        // Generates the hidden tbody element that is cloned when adding new files
-        private static string HiddenRow(HtmlHelper helper, ModelMetadata itemMetadata, string propertyName, IEnumerable<string> extraColumns, Dictionary<string, object> optionLists)
-        {
-            // Generate table cells
-            StringBuilder html = new StringBuilder();
-            string cell = TableCell(string.Empty);
-            html.Append(cell);
-            string prefix = String.Format("{0}[#]", propertyName);
-            string formControls = EditRowControlCells(helper, itemMetadata, prefix, extraColumns, optionLists);
-            html.Append(formControls);
-            html.Append(cell);
-            string button = ButtonCell(ButtonType.Delete);
-            string input = HiddenRowInputs(propertyName);
-            html.Append(button);
-            html.Append(input);
-            // Generate the table row
-            TagBuilder row = new TagBuilder("tr");
-            row.InnerHtml = html.ToString();
-            // Generate the table body
-            TagBuilder body = new TagBuilder("tbody");
-            body.MergeAttribute("style", "display:none;");
-            body.InnerHtml = row.ToString();
-            // Return the html
-            return body.ToString();
-        }
-
-        // Generates the cell containing the input for the collection indexer
-        private static string HiddenRowInputs(string propertyName)
-        {
-            TagBuilder indexer = new TagBuilder("input");
-            indexer.MergeAttribute("type", "hidden");
-            indexer.MergeAttribute("name", string.Format("{0}.Index", propertyName));
-            indexer.MergeAttribute("value", "#");
-            TagBuilder cell = new TagBuilder("td");
-            cell.InnerHtml = indexer.ToString();
             return cell.ToString();
         }
 
